@@ -1,0 +1,1155 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<title>AI Morning Club — Регистрация</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Bebas+Neue&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --yellow: #FFE500;
+    --black: #000000;
+    --surface: #0d0d0d;
+    --border: #1f1f1f;
+    --border2: #2a2a2a;
+    --text: #ffffff;
+    --text-muted: #9a9a9a;
+    --text-dim: #6e6e6e;
+    --green: #3a9;
+    --red: #e05050;
+    --radius: 10px;
+  }
+  html { scroll-behavior: smooth; }
+  body { background: var(--black); color: var(--text); font-family: 'Manrope', sans-serif; min-height: 100vh; overflow-x: hidden; }
+  body::before {
+    content: ''; position: fixed; top: 0; right: 0; bottom: 0; left: 0;
+    background-image: linear-gradient(rgba(255,229,0,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,229,0,0.03) 1px, transparent 1px);
+    background-size: 60px 60px; pointer-events: none; z-index: 0;
+  }
+  .page { position: relative; z-index: 1; max-width: 580px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+
+  .header { text-align: center; margin-bottom: 2.5rem; }
+  .header-badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(255,229,0,0.08); border: 1px solid rgba(255,229,0,0.2); border-radius: 999px; padding: 6px 16px; font-family: 'Space Mono', monospace; font-size: 11px; color: var(--yellow); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 1.2rem; }
+  .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--yellow); animation: pulse 2s infinite; display: inline-block; }
+  .dot.grey { background: var(--red); animation: none; }
+  .logo { font-family: 'Bebas Neue', sans-serif; font-size: clamp(52px, 14vw, 80px); color: var(--yellow); line-height: 0.9; letter-spacing: 3px; }
+  .logo span { color: #fff; }
+  .tagline { font-family: 'Space Mono', monospace; font-size: 11px; color: var(--text-muted); letter-spacing: 3px; text-transform: uppercase; margin-top: 0.8rem; }
+
+  .tabs { display: flex; gap: 6px; margin-bottom: 1.5rem; }
+  .tab { flex: 1; padding: 14px 8px; text-align: center; font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; cursor: pointer; border-radius: 8px; border: 1px solid var(--border); color: var(--text-muted); background: transparent; transition: all 0.2s; }
+  .tab:hover { border-color: var(--border2); color: #888; }
+  .tab.active { border-color: var(--yellow); color: var(--yellow); background: rgba(255,229,0,0.05); }
+  .panel { display: none; }
+  .panel.active { display: block; animation: fadeIn 0.35s ease; }
+
+  .counter-bar { display: flex; align-items: center; justify-content: space-between; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem 1.25rem; margin-bottom: 1.5rem; }
+  .counter-left { display: flex; align-items: baseline; gap: 8px; }
+  .counter-num { font-family: 'Bebas Neue', sans-serif; font-size: 40px; color: var(--yellow); line-height: 1; transition: transform 0.2s; }
+  .counter-num.bump { transform: scale(1.25); }
+  .counter-label { font-size: 12px; color: var(--text-muted); letter-spacing: 1px; text-transform: uppercase; }
+  .sync-badge { display: flex; align-items: center; gap: 5px; font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 1px; text-transform: uppercase; }
+  .sync-badge .sdot { width: 5px; height: 5px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; display: inline-block; }
+  .sync-badge .sdot.err { background: var(--red); animation: none; }
+
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; margin-bottom: 1rem; }
+  .card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 1.4rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border); }
+  .card-icon { width: 32px; height: 32px; background: rgba(255,229,0,0.1); border: 1px solid rgba(255,229,0,0.2); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 15px; }
+  .card-title { font-family: 'Space Mono', monospace; font-size: 11px; color: var(--yellow); letter-spacing: 2px; text-transform: uppercase; flex: 1; }
+
+  .field { margin-bottom: 1.1rem; }
+  .field:last-child { margin-bottom: 0; }
+  .field label { display: block; font-size: 11px; font-weight: 600; color: var(--text-muted); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 8px; }
+  .req { color: var(--yellow); margin-left: 2px; }
+  input, select, textarea { width: 100%; background: var(--black); border: 1px solid var(--border2); border-radius: 8px; color: var(--text); font-size: 16px; font-family: 'Manrope', sans-serif; padding: 13px 16px; outline: none; transition: border-color 0.2s, box-shadow 0.2s; -webkit-appearance: none; appearance: none; }
+  input:focus, select:focus, textarea:focus { border-color: var(--yellow); box-shadow: 0 0 0 3px rgba(255,229,0,0.08); }
+  input::placeholder, textarea::placeholder { color: var(--text-dim); }
+  select { cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23555' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 40px; }
+  select option { background: #111; }
+  textarea { resize: none; height: 90px; line-height: 1.6; }
+
+  .submit-btn { width: 100%; padding: 18px; background: var(--yellow); color: var(--black); font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 3px; border: none; border-radius: var(--radius); cursor: pointer; margin-top: 1rem; transition: opacity 0.2s, transform 0.15s; }
+  .submit-btn:hover { opacity: 0.92; transform: translateY(-1px); }
+  .submit-btn:active { transform: scale(0.98); }
+  .submit-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+  .status { text-align: center; padding: 13px; border-radius: 8px; font-size: 14px; font-weight: 500; margin-top: 1rem; display: none; }
+  .status.success { background: rgba(100,200,50,0.08); border: 1px solid rgba(100,200,50,0.25); color: #7dc43a; display: block; }
+  .status.error { background: rgba(220,50,50,0.08); border: 1px solid rgba(220,50,50,0.2); color: var(--red); display: block; }
+  .status.warn { background: rgba(255,229,0,0.06); border: 1px solid rgba(255,229,0,0.2); color: var(--yellow); display: block; }
+
+  .search-wrap { position: relative; margin-bottom: 1rem; }
+  .search-wrap svg { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); width: 15px; height: 15px; color: var(--text-dim); pointer-events: none; }
+  .search-wrap input { padding-left: 40px; font-size: 16px; }
+
+  .list-toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; gap: 8px; flex-wrap: wrap; }
+  .list-count { font-family: 'Space Mono', monospace; font-size: 11px; color: var(--text-muted); letter-spacing: 1px; }
+  .toolbar-btns { display: flex; gap: 6px; }
+  .tbtn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; background: rgba(255,229,0,0.08); border: 1px solid rgba(255,229,0,0.25); color: var(--yellow); border-radius: 8px; padding: 11px 14px; min-height: 44px; font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
+  .tbtn:hover { background: rgba(255,229,0,0.15); }
+  .tbtn svg { width: 14px; height: 14px; }
+  .tbtn.ghost { background: transparent; border-color: var(--border2); color: var(--text-muted); }
+  .tbtn.ghost:hover { border-color: #555; color: #aaa; }
+  .tbtn.danger { background: transparent; border-color: #2a1a1a; color: #663333; }
+  .tbtn.danger:hover { border-color: #993333; color: var(--red); background: rgba(220,50,50,0.06); }
+  .admin-only { display: none !important; }
+  body.admin .admin-only { display: inline-flex !important; }
+  body.admin .btn-delete { display: flex; }
+
+  .participant-item { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); animation: fadeIn 0.3s ease; }
+  .participant-item:last-child { border-bottom: none; }
+  .avatar-wrap { position: relative; flex-shrink: 0; }
+  .avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--yellow); display: flex; align-items: center; justify-content: center; font-family: 'Space Mono', monospace; font-size: 13px; font-weight: 700; color: var(--black); flex-shrink: 0; }
+  .online-dot { position: absolute; right: -1px; bottom: -1px; width: 11px; height: 11px; border-radius: 50%; background: var(--green); border: 2px solid var(--surface); }
+  .me-tag { font-family: 'Space Mono', monospace; font-size: 8px; color: var(--black); background: var(--yellow); border-radius: 3px; padding: 1px 5px; letter-spacing: 1px; vertical-align: middle; margin-left: 6px; }
+
+  /* gate (доступ только после регистрации) */
+  .gate { text-align: center; padding: 3rem 1.5rem; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); }
+  .gate-icon { font-size: 40px; margin-bottom: 1rem; }
+  .gate-title { font-family: 'Bebas Neue', sans-serif; font-size: 26px; color: var(--yellow); letter-spacing: 2px; margin-bottom: 0.6rem; }
+  .gate-text { font-size: 14px; color: var(--text-muted); line-height: 1.7; margin-bottom: 1.5rem; }
+  .gate-btn { display: inline-block; padding: 14px 32px; background: var(--yellow); color: var(--black); font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 2px; border: none; border-radius: 8px; cursor: pointer; transition: opacity 0.2s, transform 0.15s; }
+  .gate-btn:hover { opacity: 0.92; transform: translateY(-1px); }
+  .p-info { flex: 1; min-width: 0; }
+  .p-name { font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .p-meta { font-size: 12px; color: var(--text-muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .p-meta a { color: #888; text-decoration: none; border-bottom: 1px dotted #444; }
+  .p-meta a:hover { color: var(--yellow); border-color: var(--yellow); }
+  .p-time { font-family: 'Space Mono', monospace; font-size: 9px; color: var(--text-dim); flex-shrink: 0; white-space: nowrap; }
+  .p-badge { font-family: 'Space Mono', monospace; font-size: 9px; color: var(--yellow); background: rgba(255,229,0,0.08); border: 1px solid rgba(255,229,0,0.15); border-radius: 4px; padding: 3px 7px; letter-spacing: 1px; flex-shrink: 0; white-space: nowrap; max-width: 110px; overflow: hidden; text-overflow: ellipsis; }
+  .btn-delete { width: 40px; height: 40px; border-radius: 6px; flex-shrink: 0; background: transparent; border: 1px solid #1a1a1a; color: #888; cursor: pointer; display: none; align-items: center; justify-content: center; transition: all 0.2s; font-size: 14px; }
+  .btn-delete:hover { border-color: #993333; color: var(--red); background: rgba(220,50,50,0.08); }
+
+  .empty { text-align: center; padding: 2.5rem 0; color: var(--text-muted); font-size: 14px; }
+  .empty-icon { font-size: 32px; margin-bottom: 0.5rem; }
+  .loading-txt { text-align: center; padding: 2rem 0; color: var(--text-dim); font-size: 13px; font-family: 'Space Mono', monospace; letter-spacing: 1px; }
+
+  /* stats */
+  .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 1rem; }
+  .stat-box { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.1rem 1.25rem; }
+  .stat-num { font-family: 'Bebas Neue', sans-serif; font-size: 34px; color: var(--yellow); line-height: 1; }
+  .stat-label { font-size: 10px; color: var(--text-muted); letter-spacing: 1.5px; text-transform: uppercase; margin-top: 4px; }
+  .bar-row { margin-bottom: 0.9rem; }
+  .bar-row:last-child { margin-bottom: 0; }
+  .bar-head { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 5px; }
+  .bar-head .bn { color: #aaa; }
+  .bar-head .bv { font-family: 'Space Mono', monospace; color: var(--yellow); font-size: 11px; }
+  .bar-track { height: 6px; background: #161616; border-radius: 3px; overflow: hidden; }
+  .bar-fill { height: 100%; background: var(--yellow); border-radius: 3px; transition: width 0.5s ease; }
+
+  /* error banner */
+  .err-banner { background: rgba(220,50,50,0.08); border: 1px solid rgba(220,50,50,0.25); border-radius: 8px; padding: 12px 16px; font-size: 13px; color: var(--red); line-height: 1.6; margin-bottom: 1rem; display: none; }
+  .err-banner.show { display: block; }
+
+  /* modal */
+  .modal-overlay { display: none; position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 100; background: rgba(0,0,0,0.85); align-items: center; justify-content: center; padding: 1rem; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: #111; border: 1px solid #2a2a2a; border-radius: 14px; padding: 2rem; max-width: 340px; width: 90%; text-align: center; animation: fadeIn 0.2s ease; }
+  .modal-title { font-family: 'Bebas Neue', sans-serif; font-size: 24px; color: var(--yellow); letter-spacing: 2px; margin-bottom: 0.5rem; }
+  .modal-title.danger { color: var(--red); }
+  .modal-body { font-size: 14px; color: var(--text-muted); line-height: 1.6; margin-bottom: 1.5rem; }
+  .modal-body strong { color: #fff; }
+  .modal-btns { display: flex; gap: 8px; }
+  .modal-cancel { flex: 1; padding: 12px; background: transparent; border: 1px solid var(--border2); color: var(--text-muted); border-radius: 8px; cursor: pointer; font-family: 'Manrope', sans-serif; font-size: 14px; transition: all 0.2s; }
+  .modal-cancel:hover { border-color: #555; color: #fff; }
+  .modal-confirm { flex: 1; padding: 12px; background: rgba(255,229,0,0.15); border: 1px solid rgba(255,229,0,0.4); color: var(--yellow); border-radius: 8px; cursor: pointer; font-family: 'Manrope', sans-serif; font-size: 14px; font-weight: 600; transition: all 0.2s; }
+  .modal-confirm:hover { background: rgba(255,229,0,0.25); }
+  .modal-confirm.danger { background: rgba(220,50,50,0.15); border-color: #993333; color: var(--red); }
+  .modal-confirm.danger:hover { background: rgba(220,50,50,0.25); }
+  .pin-input { text-align: center; font-family: 'Space Mono', monospace; font-size: 22px; letter-spacing: 8px; margin-bottom: 1.2rem; }
+  #qr-holder { display: flex; justify-content: center; margin-bottom: 1rem; background: #fff; border-radius: 10px; padding: 14px; }
+  #qr-holder img, #qr-holder canvas { display: block; }
+
+  /* toast */
+  .toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom)); transform: translate(-50%, 80px); background: #161616; border: 1px solid rgba(255,229,0,0.3); color: #fff; border-radius: 10px; padding: 12px 20px; font-size: 13px; z-index: 200; opacity: 0; transition: all 0.3s ease; max-width: 90%; text-align: center; box-shadow: 0 8px 30px rgba(0,0,0,0.6); }
+  .toast.show { transform: translate(-50%, 0); opacity: 1; }
+  .toast b { color: var(--yellow); }
+
+  #confetti { position: fixed; top: 0; right: 0; bottom: 0; left: 0; pointer-events: none; z-index: 300; }
+
+  .footer { text-align: center; margin-top: 3rem; }
+  .footer-text { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--text-dim); letter-spacing: 2px; text-transform: uppercase; }
+
+  .tab:focus-visible, .tbtn:focus-visible, .submit-btn:focus-visible, .gate-btn:focus-visible,
+  .modal-cancel:focus-visible, .modal-confirm:focus-visible, .btn-delete:focus-visible, .p-meta a:focus-visible { outline: 2px solid var(--yellow); outline-offset: 2px; }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; } }
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--black); }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+  @media (max-width: 480px) { .page { padding: 1.5rem 1rem 3rem; } .participant-item { flex-wrap: wrap; } .p-time { order: 3; } .p-badge { order: 5; margin-left: 52px; margin-top: 2px; } }
+</style>
+</head>
+<body>
+
+<canvas id="confetti"></canvas>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<!-- generic confirm modal -->
+<div class="modal-overlay" id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+  <div class="modal">
+    <div class="modal-title danger" id="modal-title">Удалить?</div>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-btns">
+      <button class="modal-cancel" onclick="closeModal('modal')">Отмена</button>
+      <button class="modal-confirm danger" id="modal-confirm-btn">Удалить</button>
+    </div>
+  </div>
+</div>
+
+<!-- PIN modal -->
+<div class="modal-overlay" id="pin-modal" role="dialog" aria-modal="true" aria-labelledby="pin-title">
+  <div class="modal">
+    <div class="modal-title" id="pin-title">Режим организатора</div>
+    <div class="modal-body">Введи PIN-код, чтобы открыть удаление и экспорт</div>
+    <input type="password" inputmode="numeric" maxlength="6" class="pin-input" id="pin-input" placeholder="····" autocomplete="off" aria-label="PIN-код организатора">
+    <div class="modal-btns">
+      <button class="modal-cancel" onclick="closeModal('pin-modal')">Отмена</button>
+      <button class="modal-confirm" onclick="checkPin()">Войти</button>
+    </div>
+  </div>
+</div>
+
+<!-- QR modal -->
+<div class="modal-overlay" id="qr-modal" role="dialog" aria-modal="true" aria-labelledby="qr-title">
+  <div class="modal">
+    <div class="modal-title" id="qr-title">Поделиться</div>
+    <div id="qr-holder"></div>
+    <div class="modal-body" style="margin-bottom:1rem;">Покажи QR-код соседу — он откроет<br>эту же форму на своём телефоне</div>
+    <div class="modal-btns">
+      <button class="modal-cancel" style="flex:1" onclick="closeModal('qr-modal')">Закрыть</button>
+    </div>
+  </div>
+</div>
+
+<!-- Archive modal -->
+<div class="modal-overlay" id="archive-modal" role="dialog" aria-modal="true" aria-labelledby="archive-title">
+  <div class="modal">
+    <div class="modal-title" id="archive-title">Закрыть ивент</div>
+    <div class="modal-body">Все участники будут перенесены в архивную таблицу, текущий список очистится. Укажи метку ивента:</div>
+    <input type="text" id="archive-label" class="pin-input" style="letter-spacing:0; font-size:14px;" aria-label="Метка ивента">
+    <div class="modal-btns">
+      <button class="modal-cancel" onclick="closeModal('archive-modal')">Отмена</button>
+      <button class="modal-confirm" onclick="doArchive()">В архив</button>
+    </div>
+  </div>
+</div>
+
+<div class="page">
+  <div class="header">
+    <div class="header-badge"><span class="dot" id="conn-dot"></span>&nbsp;<span id="conn-label">Подключение...</span></div>
+    <div class="logo">AI<span>Morning</span><br>Club</div>
+    <div class="tagline">Нетворкинг · Знакомства · Коллаборации</div>
+  </div>
+
+  <div class="err-banner" id="err-banner">
+    ⚠️ Нет соединения с базой данных.<br>
+    Заявки сохраняются на устройстве и отправятся автоматически, когда связь появится.<br>
+    <small style="opacity:.6">Если файл открыт локально — загрузи на GitHub Pages или хостинг (нужен https).</small>
+  </div>
+
+  <div class="err-banner" id="setup-banner" style="border-color: rgba(255,229,0,0.3); color: var(--yellow); background: rgba(255,229,0,0.05);">
+    ⚙️ База данных не настроена.<br>
+    Открой <strong>index.html</strong> и вставь SUPABASE_URL и SUPABASE_ANON_KEY (инструкция в SETUP.md).
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('form', this)">Регистрация</button>
+    <button class="tab" onclick="switchTab('list', this)">Участники</button>
+    <button class="tab" onclick="switchTab('stats', this)">Статистика</button>
+  </div>
+
+  <div id="panel-form" class="panel active">
+    <div class="counter-bar">
+      <div class="counter-left">
+        <div class="counter-num" id="count">—</div>
+        <div class="counter-label">участников</div>
+      </div>
+      <div class="sync-badge"><span class="sdot" id="sdot"></span>&nbsp;<span id="sync-label">sync</span></div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="card-icon">👤</div><div class="card-title">О себе</div></div>
+      <div class="field">
+        <label for="name">Имя и фамилия <span class="req">*</span></label>
+        <input type="text" id="name" placeholder="Иван Петров" autocomplete="name" enterkeyhint="next">
+      </div>
+      <div class="field">
+        <label for="social">Инстаграм / соцсеть <span class="req">*</span></label>
+        <input type="text" id="social" placeholder="@username или ссылка" autocomplete="off" autocapitalize="off" enterkeyhint="next">
+      </div>
+      <div class="field">
+        <label for="occupation">Чем занимаешься?</label>
+        <input type="text" id="occupation" placeholder="Предприниматель, маркетолог, разработчик..." autocomplete="organization-title" enterkeyhint="next">
+      </div>
+    </div>
+
+        <button class="submit-btn" id="submitBtn" onclick="submitForm()">Зарегистрироваться</button>
+    <div class="status" id="status"></div>
+  </div>
+
+  <div id="panel-list" class="panel">
+    <!-- gate: виден, пока человек не зарегистрировался с этого устройства -->
+    <div class="gate" id="gate" style="display:none;">
+      <div class="gate-icon">🔐</div>
+      <div class="gate-title">Только для участников</div>
+      <div class="gate-text">Карточки и контакты участников видны<br>после регистрации. Это займёт минуту.<br><br><small style="opacity:.7">Уже регистрировался(ась)? Заполни форму ещё раз тем же именем или ником — мы тебя узнаем.</small></div>
+      <button class="gate-btn" onclick="goRegister()">Зарегистрироваться</button>
+      <div style="margin-top:1rem;"><button class="tbtn ghost" onclick="toggleAdmin()" style="margin:0 auto;">🔒 Я организатор</button></div>
+    </div>
+
+    <div id="list-inner">
+    <div class="search-wrap">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" id="search" placeholder="Поиск по имени, нику, занятию..." aria-label="Поиск участников" autocomplete="off">
+    </div>
+    <div class="list-toolbar">
+      <span class="list-count" id="list-count">—</span>
+      <div class="toolbar-btns">
+        <button class="tbtn ghost" onclick="openQR()" title="QR-код формы">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><line x1="14" y1="14" x2="14" y2="17"/><line x1="17" y1="14" x2="21" y2="14"/><line x1="21" y1="17" x2="21" y2="21"/><line x1="17" y1="21" x2="17" y2="21"/></svg>QR
+        </button>
+        <button class="tbtn ghost" id="admin-btn" onclick="toggleAdmin()" title="Режим организатора" aria-label="Режим организатора">🔒</button>
+        <button class="tbtn admin-only" onclick="exportXLSX()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>XLSX
+        </button>
+        <button class="tbtn ghost admin-only" onclick="exportCSV()">CSV</button>
+        <button class="tbtn ghost admin-only" onclick="openArchive()" title="Перенести список в архив">📦 Закрыть ивент</button>
+        <button class="tbtn danger admin-only" onclick="confirmClearAll()">Очистить</button>
+      </div>
+    </div>
+    <div class="card">
+      <div id="participants-list"><div class="loading-txt">Подключение...</div></div>
+    </div>
+    </div><!-- /list-inner -->
+  </div>
+
+  <div id="panel-stats" class="panel">
+    <div class="stat-grid">
+      <div class="stat-box"><div class="stat-num" id="st-total">—</div><div class="stat-label">Всего участников</div></div>
+      <div class="stat-box"><div class="stat-num" id="st-today">—</div><div class="stat-label">Сегодня</div></div>
+      <div class="stat-box"><div class="stat-num" id="st-new">—</div><div class="stat-label">Сейчас онлайн</div></div>
+      <div class="stat-box"><div class="stat-num" id="st-last">—</div><div class="stat-label">Последняя регистрация</div></div>
+    </div>
+
+  </div>
+
+  <div class="footer">
+    <div class="footer-text">AI Morning Club · Banana Agency · Warsaw</div>
+  </div>
+</div>
+
+<script>
+  // ============ КОНФИГ — ЗАПОЛНИ ПОСЛЕ СОЗДАНИЯ ПРОЕКТА SUPABASE ============
+  // Supabase Dashboard → Settings → API:
+  const SUPABASE_URL = 'https://jjgunapavehetbwbkuog.supabase.co';      // например 'https://abcdefgh.supabase.co'
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpqZ3VuYXBhdmVoZXRid2JrdW9nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA4NTQzMTksImV4cCI6MjA5NjQzMDMxOX0.sk-ssKNUFYSeVJ_d3Km12GDw-ZTYqqQ6zdNLDB2p1lI';    // ключ "anon public"
+  // PIN организатора задаётся НЕ здесь, а в базе (supabase_setup.sql) — проверяется на сервере.
+  // ==========================================================================
+
+  const QUEUE_KEY = 'aimc3_queue';
+  const ME_KEY = 'aimc3_me';
+  const PIN_KEY = 'aimc3_pin';
+  const POLL_MS = 20000;
+
+  const CONFIGURED = /^https:\/\//.test(SUPABASE_URL) && SUPABASE_ANON_KEY.length > 40;
+
+  // безопасные обёртки над storage (Safari private / webview могут кидать)
+  const SS = {
+    get(k) { try { return sessionStorage.getItem(k); } catch (e) { return null; } },
+    set(k, v) { try { sessionStorage.setItem(k, v); } catch (e) {} },
+    del(k) { try { sessionStorage.removeItem(k); } catch (e) {} }
+  };
+  const LS = {
+    get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+    set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} },
+    del(k) { try { localStorage.removeItem(k); } catch (e) {} }
+  };
+
+  let sb = null;                 // supabase client
+  let participants = {};         // id -> row
+  let onlineSet = new Set();     // id участников онлайн (realtime presence)
+  let connected = false, realtimeLive = false;
+  let admin = !!SS.get(PIN_KEY);
+  let me = null;
+  try { me = JSON.parse(LS.get(ME_KEY)); } catch (e) {}
+  let pollTimer = null, firstLoad = true, loaded = false;
+  let fetching = false, fetchGen = 0;
+  let chData = null, chPres = null, rtRetry = 0, rtTimer = null;
+  const ownCids = new Set();
+
+  // ===== ЗАГРУЗКА БИБЛИОТЕКИ SUPABASE (два CDN на случай блокировок) =====
+  function loadScript(src) {
+    return new Promise((res, rej) => {
+      const s = document.createElement('script');
+      s.src = src; s.onload = res; s.onerror = rej;
+      document.head.appendChild(s);
+    });
+  }
+  async function loadSupabase() {
+    if (window.supabase) return true;
+    const urls = [
+      'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js',
+      'https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.min.js'
+    ];
+    for (const u of urls) {
+      try { await loadScript(u); if (window.supabase) return true; } catch (e) {}
+    }
+    return false;
+  }
+
+  // ===== INIT =====
+  if (admin) document.body.classList.add('admin');
+  updateAdminBtn();
+  applyGate();
+  boot();
+
+  async function boot() {
+    if (!CONFIGURED) {
+      document.getElementById('setup-banner').classList.add('show');
+      setConnected(false);
+      document.getElementById('participants-list').innerHTML =
+        '<div class="loading-txt">База не настроена — см. SETUP.md</div>';
+      return;
+    }
+    const ok = await loadSupabase();
+    if (!ok) {
+      setConnected(false);
+      toast('Не удалось загрузить библиотеку базы данных');
+      return;
+    }
+    sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: { persistSession: false },
+      realtime: { params: { eventsPerSecond: 5 } }
+    });
+    await loadAll();
+    startRealtime();
+    joinPresence();
+    flushQueue();
+  }
+
+  // пауза в фоне → экономия сети/батареи; мгновенное восстановление при возврате
+  document.addEventListener('visibilitychange', () => {
+    if (!sb) return;
+    if (document.hidden) {
+      stopPolling();
+    } else {
+      loadAll();
+      if (!realtimeLive) startRealtime();
+      flushQueue();
+    }
+  });
+  window.addEventListener('online', () => { if (sb) { loadAll(); flushQueue(); } });
+
+  // ===== MEMBERSHIP (доступ к карточкам только после регистрации) =====
+  function isMember() {
+    if (admin) return true;
+    if (!me || !me.key) return false;
+    if (me.pending) return true; // офлайн-заявка в очереди — доступ открыт
+    if (loaded && !(me.key in participants)) {
+      me = null; LS.del(ME_KEY);
+      return false;
+    }
+    return true;
+  }
+  function applyGate() {
+    const locked = !isMember();
+    document.getElementById('gate').style.display = locked ? 'block' : 'none';
+    document.getElementById('list-inner').style.display = locked ? 'none' : 'block';
+  }
+  function goRegister() {
+    switchTab('form', document.querySelector('.tab'));
+    document.getElementById('name').focus();
+  }
+  function setMe(key, name, pending) {
+    me = { key, name, pending: !!pending };
+    LS.set(ME_KEY, JSON.stringify(me));
+    applyGate();
+    if (!pending) joinPresence();
+  }
+
+  // ===== ДАННЫЕ =====
+  function rowTs(r) { return r && r.created_at ? Date.parse(r.created_at) : 0; }
+
+  async function loadAll() {
+    if (!sb || fetching) return;
+    fetching = true;
+    const gen = ++fetchGen;
+    try {
+      const { data, error } = await sb.from('participants').select('*').order('created_at', { ascending: true });
+      if (error) throw error;
+      if (gen === fetchGen) {
+        const map = {};
+        for (const r of data || []) map[r.id] = r;
+        participants = map;
+        setConnected(true);
+        renderAll();
+        firstLoad = false; loaded = true;
+      }
+    } catch (e) {
+      if (!realtimeLive) setConnected(false);
+    } finally {
+      fetching = false;
+    }
+  }
+
+  // ===== REALTIME: postgres_changes + presence =====
+  function startRealtime() {
+    if (!sb) return;
+    if (chData) { try { sb.removeChannel(chData); } catch (e) {} chData = null; }
+    chData = sb.channel('participants-feed')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'participants' }, payload => {
+        try {
+          if (payload.eventType === 'INSERT' && payload.new) {
+            const r = payload.new;
+            const isNew = !(r.id in participants);
+            participants[r.id] = r;
+            if (isNew && !ownCids.has(r.cid) && !firstLoad) notifyNew(r);
+          } else if (payload.eventType === 'UPDATE' && payload.new) {
+            participants[payload.new.id] = payload.new;
+          } else if (payload.eventType === 'DELETE' && payload.old && payload.old.id) {
+            delete participants[payload.old.id];
+          }
+          renderAll();
+        } catch (e) {}
+      })
+      .subscribe(status => {
+        if (status === 'SUBSCRIBED') {
+          realtimeLive = true; rtRetry = 0;
+          stopPolling();
+          setConnected(true);
+          loadAll(); // подтягиваем пропущенное за время реконнекта
+          flushQueue();
+        } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
+          realtimeLive = false;
+          setConnected(false);
+          startPolling();
+          if (!rtTimer) {
+            const base = Math.min(30000, 2000 * Math.pow(2, rtRetry++));
+            const delay = base * (0.5 + Math.random()); // jitter
+            rtTimer = setTimeout(() => { rtTimer = null; if (!realtimeLive) startRealtime(); }, delay);
+          }
+        }
+      });
+  }
+
+  function joinPresence() {
+    if (!sb || !me || !me.key || me.pending) return;
+    if (chPres) { try { sb.removeChannel(chPres); } catch (e) {} chPres = null; }
+    chPres = sb.channel('online-now', { config: { presence: { key: me.key } } })
+      .on('presence', { event: 'sync' }, () => {
+        try {
+          onlineSet = new Set(Object.keys(chPres.presenceState()));
+          if (document.getElementById('panel-list').classList.contains('active')) renderList();
+        } catch (e) {}
+      })
+      .subscribe(status => {
+        if (status === 'SUBSCRIBED') { try { chPres.track({ t: Date.now() }); } catch (e) {} }
+      });
+  }
+  function isOnline(id) { return onlineSet.has(id); }
+
+  function startPolling() {
+    if (pollTimer) return;
+    loadAll();
+    pollTimer = setInterval(loadAll, POLL_MS);
+  }
+  function stopPolling() {
+    if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+  }
+
+  function notifyNew(r) {
+    if (r && r.name) toast('🎉 Новый участник: <b>' + esc(r.name) + '</b>');
+  }
+
+  // ===== OFFLINE QUEUE =====
+  function getQueue() { try { return JSON.parse(LS.get(QUEUE_KEY)) || []; } catch (e) { return []; } }
+  function setQueue(q) { LS.set(QUEUE_KEY, JSON.stringify(q)); }
+  function findByCid(cid) {
+    if (!cid) return null;
+    for (const k in participants) if (participants[k].cid === cid) return participants[k];
+    return null;
+  }
+
+  let flushing = false;
+  async function flushQueue() {
+    if (flushing || !sb) return;
+    let q = getQueue();
+    if (!q.length) return;
+    flushing = true;
+    let sent = 0;
+    try {
+      while (q.length) {
+        const p = q[0];
+        const existing = findByCid(p.cid);
+        if (existing) {
+          if (!me || !me.key || me.pending) setMe(existing.id, p.name);
+          sent++;
+        } else {
+          try {
+            const { data, error } = await sb.from('participants').insert(p).select().single();
+            if (error) {
+              if (error.code === '23505') { sent++; } // уже доставлено ранее (cid unique)
+              else break; // нет связи/другая ошибка — оставляем в очереди
+            } else {
+              ownCids.add(p.cid);
+              participants[data.id] = data;
+              if (!me || !me.key || me.pending) setMe(data.id, p.name);
+              sent++;
+            }
+          } catch (e) { break; }
+        }
+        const cur = getQueue(); cur.shift(); setQueue(cur); q = cur; // не теряем добавленное за время await
+      }
+    } finally { flushing = false; }
+    if (sent) { toast('📤 Офлайн-заявки отправлены (' + sent + ')'); renderAll(); }
+  }
+
+  // ===== CONNECTION UI =====
+  function setConnected(ok) {
+    connected = ok;
+    const dot = document.getElementById('conn-dot');
+    const lbl = document.getElementById('conn-label');
+    const sdot = document.getElementById('sdot');
+    const slbl = document.getElementById('sync-label');
+    const banner = document.getElementById('err-banner');
+    if (ok) {
+      dot.className = 'dot';
+      lbl.textContent = 'Live · Варшава';
+      sdot.className = 'sdot';
+      slbl.textContent = realtimeLive ? 'realtime' : 'sync';
+      slbl.style.color = 'var(--green)';
+      banner.classList.remove('show');
+    } else {
+      dot.className = 'dot grey';
+      lbl.textContent = CONFIGURED ? 'Нет соединения' : 'Не настроено';
+      sdot.className = 'sdot err';
+      slbl.textContent = 'offline';
+      slbl.style.color = 'var(--red)';
+      if (CONFIGURED) banner.classList.add('show');
+    }
+  }
+
+  // ===== RENDER =====
+  function renderAll() {
+    const n = Object.keys(participants).length;
+    const cnt = document.getElementById('count');
+    if (cnt.textContent !== String(n)) {
+      cnt.textContent = n;
+      cnt.classList.add('bump');
+      setTimeout(() => cnt.classList.remove('bump'), 250);
+    }
+    applyGate();
+    renderList();
+    if (document.getElementById('panel-stats').classList.contains('active')) renderStats();
+  }
+
+  // dirty-check: не перерисовываем список, если данные не изменились
+  let lastSig = '';
+  function listSignature(filtered) {
+    let s = '';
+    for (const k of filtered) s += k + ':' + (isOnline(k) ? '1' : '0') + ':' + rowTs(participants[k]) + '|';
+    return s;
+  }
+
+  function sortedKeys() {
+    return Object.keys(participants).sort((a, b) => rowTs(participants[b]) - rowTs(participants[a]));
+  }
+
+  function socialLink(s) {
+    if (!s) return '';
+    const t = s.trim();
+    let href = '';
+    if (/^https?:\/\//i.test(t)) href = t;
+    else if (/^@?[\w.\-]+$/.test(t)) href = 'https://instagram.com/' + t.replace(/^@/, '');
+    return href ? '<a href="' + esc(href) + '" target="_blank" rel="noopener noreferrer">' + esc(t) + '</a>' : esc(t);
+  }
+
+  function renderList() {
+    if (!isMember()) { applyGate(); return; }
+    const keys = sortedKeys();
+    const n = keys.length;
+    const q = (document.getElementById('search').value || '').toLowerCase().trim();
+    const filtered = q ? keys.filter(k => {
+      const p = participants[k];
+      return [p.name, p.social, p.occupation, p.connection, p.goal].join(' ').toLowerCase().includes(q);
+    }) : keys;
+
+    const onlineN = keys.filter(isOnline).length;
+    document.getElementById('list-count').textContent =
+      (q ? filtered.length + ' из ' : '') + n + ' ' + plural(n, 'участник', 'участника', 'участников') +
+      (onlineN ? ' · ' + onlineN + ' онлайн' : '');
+
+    const el = document.getElementById('participants-list');
+    if (!n) {
+      el.innerHTML = '<div class="empty"><div class="empty-icon">👥</div>Пока никто не зарегистрировался</div>';
+      lastSig = ''; return;
+    }
+    if (!filtered.length) {
+      el.innerHTML = '<div class="empty"><div class="empty-icon">🔍</div>Никого не нашли по запросу</div>';
+      lastSig = ''; return;
+    }
+
+    const sig = q + '#' + listSignature(filtered);
+    if (sig === lastSig) return;
+    lastSig = sig;
+
+    el.innerHTML = filtered.map(key => {
+      const p = participants[key];
+      const initials = (p.name || '?').trim().split(/\s+/).map(w => w[0]).join('').substring(0, 2).toUpperCase();
+      const badge = p.connection || '';
+      const metaParts = [];
+      if (p.social) metaParts.push(socialLink(p.social));
+      if (p.occupation) metaParts.push(esc(p.occupation));
+      const online = isOnline(key);
+      const meTag = (me && me.key === key) ? '<span class="me-tag">ты</span>' : '';
+      return '<div class="participant-item">' +
+        '<div class="avatar-wrap"><div class="avatar">' + esc(initials) + '</div>' + (online ? '<span class="online-dot" title="Онлайн"></span>' : '') + '</div>' +
+        '<div class="p-info">' +
+          '<div class="p-name">' + esc(p.name) + meTag + '</div>' +
+          '<div class="p-meta">' + metaParts.join(' · ') + '</div>' +
+        '</div>' +
+        (badge ? '<div class="p-badge">' + esc(badge) + '</div>' : '') +
+        '<span class="p-time">' + timeAgo(rowTs(p)) + '</span>' +
+        '<button class="btn-delete" data-key="' + esc(key) + '" title="Удалить" aria-label="Удалить участника">✕</button>' +
+      '</div>';
+    }).join('');
+  }
+
+  // делегирование вместо inline-onclick (безопасно при любых id)
+  document.getElementById('participants-list').addEventListener('click', e => {
+    const b = e.target.closest('.btn-delete');
+    if (b) confirmDelete(b.getAttribute('data-key'));
+  });
+
+  function renderStats() {
+    const keys = Object.keys(participants);
+    const n = keys.length;
+    document.getElementById('st-total').textContent = n;
+
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const todayCount = keys.filter(k => rowTs(participants[k]) >= today.getTime()).length;
+    document.getElementById('st-today').textContent = todayCount;
+
+    document.getElementById('st-new').textContent = keys.filter(isOnline).length;
+
+    const lastTs = Math.max(0, ...keys.map(k => rowTs(participants[k])));
+    document.getElementById('st-last').textContent = lastTs ? timeAgo(lastTs) : '—';
+
+  }
+
+  // ===== HELPERS =====
+  function switchTab(id, el) {
+    document.querySelectorAll('.tab').forEach(t => { t.classList.remove('active'); t.setAttribute('aria-selected', 'false'); });
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    el.classList.add('active');
+    el.setAttribute('aria-selected', 'true');
+    document.getElementById('panel-' + id).classList.add('active');
+    document.getElementById('status').style.display = 'none';
+    if (id === 'list') { lastSig = ''; renderList(); }
+    if (id === 'stats') renderStats();
+  }
+
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
+  function plural(n, one, few, many) {
+    const m10 = n % 10, m100 = n % 100;
+    if (m10 === 1 && m100 !== 11) return one;
+    if (m10 >= 2 && m10 <= 4 && (m100 < 10 || m100 >= 20)) return few;
+    return many;
+  }
+
+  function timeAgo(ts) {
+    if (!ts) return '';
+    const d = Date.now() - ts;
+    if (d < 60000) return 'сейчас';
+    const m = Math.floor(d / 60000);
+    if (m < 60) return m + ' мин';
+    const h = Math.floor(m / 60);
+    if (h < 24) return h + ' ч';
+    return Math.floor(h / 24) + ' д';
+  }
+
+  function showStatus(msg, type) {
+    const el = document.getElementById('status');
+    el.textContent = msg;
+    el.className = 'status ' + type;
+    el.style.display = '';
+    clearTimeout(el._t);
+    el._t = setTimeout(() => el.style.display = 'none', 5000);
+  }
+
+  let searchTimer = null;
+  document.getElementById('search').addEventListener('input', () => {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => { lastSig = ''; renderList(); }, 180);
+  });
+
+  let toastTimer = null;
+  function toast(html) {
+    const el = document.getElementById('toast');
+    el.innerHTML = html;
+    el.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove('show'), 3500);
+  }
+
+  // ===== MODALS =====
+  let lastFocus = null;
+  function openModal(id) {
+    lastFocus = document.activeElement;
+    const m = document.getElementById(id);
+    m.classList.add('open');
+    const f = m.querySelector('input, button');
+    if (f) setTimeout(() => f.focus(), 50);
+  }
+  function closeModal(id) {
+    document.getElementById(id).classList.remove('open');
+    if (lastFocus && lastFocus.focus) { try { lastFocus.focus(); } catch (e) {} }
+  }
+  document.querySelectorAll('.modal-overlay').forEach(ov => {
+    ov.addEventListener('click', e => { if (e.target === ov) ov.classList.remove('open'); });
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') document.querySelectorAll('.modal-overlay.open').forEach(ov => ov.classList.remove('open'));
+  });
+
+  function confirm2(title, body, onConfirm, danger, confirmLabel, cancelLabel, onCancel) {
+    const t = document.getElementById('modal-title');
+    t.textContent = title;
+    t.className = 'modal-title' + (danger ? ' danger' : '');
+    document.getElementById('modal-body').innerHTML = body;
+    const btn = document.getElementById('modal-confirm-btn');
+    btn.className = 'modal-confirm' + (danger ? ' danger' : '');
+    btn.textContent = confirmLabel || (danger ? 'Удалить' : 'Да');
+    btn.onclick = () => { closeModal('modal'); onConfirm(); };
+    const cancel = document.querySelector('#modal .modal-cancel');
+    cancel.textContent = cancelLabel || 'Отмена';
+    cancel.onclick = () => { closeModal('modal'); if (onCancel) onCancel(); };
+    openModal('modal');
+  }
+
+  // ===== ADMIN (PIN проверяется на сервере через RPC) =====
+  function adminPin() { return SS.get(PIN_KEY) || ''; }
+  function updateAdminBtn() {
+    document.getElementById('admin-btn').textContent = admin ? '🔓' : '🔒';
+  }
+  function toggleAdmin() {
+    if (admin) {
+      admin = false;
+      SS.del(PIN_KEY);
+      document.body.classList.remove('admin');
+      updateAdminBtn();
+      toast('Режим организатора выключен');
+      lastSig = ''; applyGate(); renderList();
+    } else {
+      document.getElementById('pin-input').value = '';
+      openModal('pin-modal');
+    }
+  }
+  document.getElementById('pin-input').addEventListener('keydown', e => { if (e.key === 'Enter') checkPin(); });
+  async function checkPin() {
+    const v = document.getElementById('pin-input').value.trim();
+    if (!v || !sb) return;
+    let ok = false;
+    try {
+      const { data, error } = await sb.rpc('verify_pin', { p: v });
+      ok = !error && data === true;
+    } catch (e) {}
+    if (ok) {
+      admin = true;
+      SS.set(PIN_KEY, v);
+      document.body.classList.add('admin');
+      updateAdminBtn();
+      closeModal('pin-modal');
+      toast('🔓 Режим организатора включён');
+      lastSig = ''; applyGate(); renderList();
+    } else {
+      document.getElementById('pin-input').value = '';
+      document.getElementById('pin-input').placeholder = '✕ неверно';
+      toast('Неверный PIN');
+    }
+  }
+
+  function confirmDelete(key) {
+    if (!admin) return;
+    const p = participants[key] || {};
+    confirm2('Удалить участника?', '<strong>' + esc(p.name || '') + '</strong>', async () => {
+      try {
+        const { error } = await sb.rpc('delete_participant', { p: adminPin(), pid: key });
+        if (error) throw error;
+        delete participants[key];
+        lastSig = ''; renderAll();
+      } catch (e) { toast('Ошибка удаления'); }
+    }, true);
+  }
+
+  function confirmClearAll() {
+    if (!admin) return;
+    const n = Object.keys(participants).length;
+    if (!n) return;
+    confirm2('Очистить весь список?',
+      'Будет удалено <strong>' + n + '</strong> ' + plural(n, 'участник', 'участника', 'участников') + ' БЕЗ архива. Нельзя отменить.',
+      async () => {
+        try {
+          const { error } = await sb.rpc('clear_participants', { p: adminPin() });
+          if (error) throw error;
+          participants = {};
+          lastSig = ''; renderAll();
+        } catch (e) { toast('Ошибка'); }
+      }, true);
+  }
+
+  // ===== АРХИВ ИВЕНТА =====
+  function openArchive() {
+    if (!admin) return;
+    const n = Object.keys(participants).length;
+    if (!n) { toast('Список пуст — нечего архивировать'); return; }
+    document.getElementById('archive-label').value = new Date().toISOString().slice(0, 10) + ' · AI Morning Club';
+    openModal('archive-modal');
+  }
+  async function doArchive() {
+    const label = document.getElementById('archive-label').value.trim();
+    closeModal('archive-modal');
+    try {
+      const { data, error } = await sb.rpc('archive_event', { p: adminPin(), label });
+      if (error) throw error;
+      participants = {};
+      lastSig = ''; renderAll();
+      toast('📦 Ивент закрыт: ' + data + ' ' + plural(data, 'участник перенесён', 'участника перенесено', 'участников перенесено') + ' в архив');
+    } catch (e) { toast('Ошибка архивирования'); }
+  }
+
+  // ===== EXPORT =====
+  function csvCell(v) {
+    let s = String(v == null ? '' : v);
+    if (/^[=+\-@\t\r]/.test(s)) s = "'" + s; // нейтрализуем формулы Excel/Sheets
+    return '"' + s.replace(/"/g, '""') + '"';
+  }
+  function exportRows() {
+    return Object.keys(participants)
+      .sort((a, b) => rowTs(participants[a]) - rowTs(participants[b]))
+      .map(k => {
+        const p = participants[k];
+        return {
+          'Имя': p.name || '', 'Соцсеть': p.social || '', 'Занятие': p.occupation || '',
+          'Связь с клубом': p.connection || '', 'Цель': p.goal || '',
+          'Дата и время': p.created_at ? new Date(p.created_at).toLocaleString('ru-RU') : ''
+        };
+      });
+  }
+  function exportCSV() {
+    const rows = exportRows();
+    if (!rows.length) { toast('Список пуст'); return; }
+    const headers = Object.keys(rows[0]);
+    const lines = [headers.join(',')].concat(rows.map(r => headers.map(h => csvCell(r[h])).join(',')));
+    const csv = '﻿' + lines.join('\r\n');
+    const fname = 'AI_Morning_Club_' + new Date().toLocaleDateString('ru-RU').replace(/\./g, '-') + '.csv';
+    downloadOrCopy(new Blob([csv], { type: 'text/csv;charset=utf-8' }), fname, csv);
+  }
+  let xlsxLoading = false;
+  async function exportXLSX() {
+    const rows = exportRows();
+    if (!rows.length) { toast('Список пуст'); return; }
+    if (!window.XLSX && !xlsxLoading) {
+      xlsxLoading = true;
+      toast('Готовим Excel...');
+      const urls = [
+        'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js',
+        'https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js'
+      ];
+      for (const u of urls) { try { await loadScript(u); if (window.XLSX) break; } catch (e) {} }
+      xlsxLoading = false;
+    }
+    if (!window.XLSX) { toast('Excel-модуль не загрузился — скачиваю CSV'); exportCSV(); return; }
+    try {
+      const ws = XLSX.utils.json_to_sheet(rows);
+      ws['!cols'] = [{ wch: 24 }, { wch: 24 }, { wch: 28 }, { wch: 22 }, { wch: 40 }, { wch: 18 }];
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Участники');
+      XLSX.writeFile(wb, 'AI_Morning_Club_' + new Date().toLocaleDateString('ru-RU').replace(/\./g, '-') + '.xlsx');
+      toast('📄 XLSX скачан');
+    } catch (e) { toast('Не получилось — скачиваю CSV'); exportCSV(); }
+  }
+  function downloadOrCopy(blob, fname, text) {
+    try {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = fname;
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      toast('📄 Файл скачан');
+    } catch (e) {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(
+          () => toast('📋 Скопировано в буфер обмена'),
+          () => toast('Не удалось — открой в Safari/Chrome')
+        );
+      } else { toast('Не удалось — открой в Safari/Chrome'); }
+    }
+  }
+
+  // ===== QR =====
+  let qrLoaded = false;
+  function openQR() {
+    openModal('qr-modal');
+    const holder = document.getElementById('qr-holder');
+    const make = () => {
+      holder.innerHTML = '';
+      new QRCode(holder, { text: location.href, width: 200, height: 200, colorDark: '#000', colorLight: '#fff' });
+    };
+    if (qrLoaded) { make(); return; }
+    holder.innerHTML = '<div style="width:200px;height:200px;display:flex;align-items:center;justify-content:center;color:#999;font-size:12px;">Загрузка...</div>';
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';
+    s.onload = () => { qrLoaded = true; make(); };
+    s.onerror = () => { holder.innerHTML = '<div style="color:#999;font-size:12px;padding:1rem;">Не удалось загрузить QR.<br>Скопируй ссылку из адресной строки.</div>'; };
+    document.head.appendChild(s);
+  }
+
+  // ===== DUPLICATE CHECK =====
+  function normSocial(s) {
+    return String(s || '').toLowerCase().trim()
+      .replace(/^https?:\/\//, '')
+      .replace(/^www\./, '')
+      .replace(/^(instagram\.com|t\.me|linkedin\.com\/in|facebook\.com)\//, '')
+      .replace(/^@/, '')
+      .replace(/[\/\?#].*$/, '');
+  }
+  function findDuplicate(name, social) {
+    const ns = normSocial(social);
+    const nn = name.toLowerCase().trim();
+    let byName = null;
+    for (const k of Object.keys(participants)) {
+      const p = participants[k];
+      if (ns && normSocial(p.social) === ns) return { key: k, p, strong: true };
+      if (nn && (p.name || '').toLowerCase().trim() === nn && !byName) byName = { key: k, p, strong: false };
+    }
+    return byName;
+  }
+
+  // ===== CONFETTI =====
+  function confetti() {
+    const cv = document.getElementById('confetti');
+    const ctx = cv.getContext('2d');
+    cv.width = innerWidth; cv.height = innerHeight;
+    const colors = ['#FFE500', '#ffffff', '#FFC700', '#fff7b0'];
+    const parts = Array.from({ length: 90 }, () => ({
+      x: cv.width / 2 + (Math.random() - 0.5) * 120,
+      y: cv.height * 0.35,
+      vx: (Math.random() - 0.5) * 14,
+      vy: -Math.random() * 13 - 4,
+      s: Math.random() * 7 + 3,
+      c: colors[Math.floor(Math.random() * colors.length)],
+      r: Math.random() * Math.PI,
+      vr: (Math.random() - 0.5) * 0.3
+    }));
+    const t0 = performance.now();
+    (function frame(t) {
+      const dt = (t - t0) / 1000;
+      ctx.clearRect(0, 0, cv.width, cv.height);
+      parts.forEach(p => {
+        p.x += p.vx; p.y += p.vy; p.vy += 0.45; p.r += p.vr;
+        ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.r);
+        ctx.fillStyle = p.c; ctx.globalAlpha = Math.max(0, 1 - dt / 1.6);
+        ctx.fillRect(-p.s / 2, -p.s / 2, p.s, p.s * 0.6);
+        ctx.restore();
+      });
+      if (dt < 1.7) requestAnimationFrame(frame);
+      else ctx.clearRect(0, 0, cv.width, cv.height);
+    })(t0);
+  }
+
+  // ===== SUBMIT =====
+  ['name', 'social', 'occupation'].forEach((id, i, arr) => {
+    document.getElementById(id).addEventListener('keydown', e => {
+      if (e.key !== 'Enter') return;
+      e.preventDefault();
+      const next = document.getElementById(arr[i + 1]);
+      if (next) next.focus(); else submitForm();
+    });
+  });
+
+  function uuid() {
+    return 'c' + Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
+  }
+
+  let submitting = false;
+  async function submitForm() {
+    if (submitting) return;
+    if (!CONFIGURED) { showStatus('База не настроена — см. SETUP.md', 'error'); return; }
+    const name = document.getElementById('name').value.trim();
+    const social = document.getElementById('social').value.trim();
+    if (!name) { showStatus('Введи имя', 'error'); document.getElementById('name').focus(); return; }
+    if (!social) { showStatus('Введи соцсеть', 'error'); document.getElementById('social').focus(); return; }
+
+    const dup = findDuplicate(name, social);
+    if (dup && !submitForm._force) {
+      const msg = dup.strong
+        ? 'Похоже, <strong>' + esc(dup.p.name) + '</strong> уже зарегистрирован(а) с этой соцсетью.<br>Это ты?'
+        : 'Участник с именем <strong>' + esc(dup.p.name) + '</strong> уже есть.<br>Это ты или другой человек?';
+      confirm2('Уже в списке?', msg,
+        () => {
+          setMe(dup.key, dup.p.name);
+          clearForm();
+          showStatus('✓ С возвращением, ' + dup.p.name + '! Доступ к участникам открыт', 'success');
+          lastSig = ''; applyGate(); renderAll();
+        },
+        false, 'Да, это я', 'Я другой человек',
+        () => { submitForm._force = true; submitForm(); });
+      return;
+    }
+    submitForm._force = false;
+
+    const payload = {
+      name, social,
+      occupation: document.getElementById('occupation').value.trim(),
+      connection: '',
+      goal: '',
+      cid: uuid()
+    };
+
+    const btn = document.getElementById('submitBtn');
+    submitting = true;
+    btn.disabled = true; btn.textContent = 'Сохраняем...';
+
+    let row = null, ok = false;
+    if (sb) {
+      try {
+        const { data, error } = await sb.from('participants').insert(payload).select().single();
+        if (!error && data) { row = data; ok = true; }
+      } catch (e) { ok = false; }
+    }
+
+    if (ok) {
+      ownCids.add(payload.cid);
+      participants[row.id] = row;
+      setMe(row.id, name);
+      lastSig = ''; renderAll();
+      clearForm();
+      showStatus('✓ Готово! Тебе открыт список участников', 'success');
+      confetti();
+    } else {
+      const q = getQueue(); q.push(payload); setQueue(q);
+      setMe(payload.cid, name, true);
+      clearForm();
+      showStatus('📥 Нет связи — заявка сохранена и отправится автоматически', 'warn');
+    }
+    submitting = false;
+    btn.disabled = false; btn.textContent = 'Зарегистрироваться';
+  }
+
+  function clearForm() {
+    ['name', 'social', 'occupation'].forEach(id => document.getElementById(id).value = '');
+  }
+</script>
+</body>
+</html>
