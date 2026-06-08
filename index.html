@@ -401,7 +401,7 @@
   const CONFIGURED = /^https:\/\//.test(SUPABASE_URL) && SUPABASE_ANON_KEY.length > 40;
 
   // ===== ГИБРИД: связка с Telegram-ботом / мини-аппом =====
-  const BOT_USERNAME = 'banana_event_bot';   // Telegram-бот для привязки анкеты (без @)
+  const BOT_USERNAME = 'AEvents_bot';   // Telegram-бот (event/mini-app) для привязки анкеты (без @)
   const EVENT_SLUG = (new URLSearchParams(location.search).get('event') || '').trim();
 
   // Если форма открыта ВНУТРИ Telegram (мини-апп) — берём личность из Telegram.
