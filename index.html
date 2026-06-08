@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#000000">
 <title>AI Morning Club — Регистрация</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Bebas+Neue&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -330,6 +331,7 @@
 
         <button class="submit-btn" id="submitBtn" onclick="submitForm()">Зарегистрироваться</button>
     <div class="status" id="status"></div>
+    <a id="tg-link" target="_blank" rel="noopener" style="display:none;width:100%;text-align:center;text-decoration:none;padding:16px;margin-top:0.8rem;border-radius:var(--radius);background:#2AABEE;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;">✈ Открыть в Telegram</a>
   </div>
 
   <div id="panel-list" class="panel">
@@ -397,6 +399,55 @@
   const POLL_MS = 20000;
 
   const CONFIGURED = /^https:\/\//.test(SUPABASE_URL) && SUPABASE_ANON_KEY.length > 40;
+
+  // ===== ГИБРИД: связка с Telegram-ботом / мини-аппом =====
+  const BOT_USERNAME = 'banana_event_bot';   // Telegram-бот для привязки анкеты (без @)
+  const EVENT_SLUG = (new URLSearchParams(location.search).get('event') || '').trim();
+
+  // Если форма открыта ВНУТРИ Telegram (мини-апп) — берём личность из Telegram.
+  let TG_USER = null;
+  try {
+    const tg = window.Telegram && window.Telegram.WebApp;
+    if (tg) {
+      tg.ready();
+      if (tg.expand) tg.expand();
+      if (tg.initDataUnsafe && tg.initDataUnsafe.user) TG_USER = tg.initDataUnsafe.user;
+    }
+  } catch (e) {}
+
+  // Предзаполняем имя/ник из Telegram, если поля пустые.
+  if (TG_USER) {
+    try {
+      const nm = [TG_USER.first_name, TG_USER.last_name].filter(Boolean).join(' ').trim();
+      const nameEl = document.getElementById('name');
+      const socEl = document.getElementById('social');
+      if (nameEl && !nameEl.value && nm) nameEl.value = nm;
+      if (socEl && !socEl.value && TG_USER.username) socEl.value = '@' + TG_USER.username;
+    } catch (e) {}
+  }
+
+  // Признак «миграция не накатана» (нет новых колонок ИЛИ нет RPC) — тогда форма
+  // делает обычную вставку, чтобы не падать. Токены генерит только сервер (RPC).
+  function _isSchemaError(err) {
+    if (!err) return false;
+    const code = String(err.code || '');
+    const msg = String(err.message || '').toLowerCase();
+    return code === 'PGRST204' || code === 'PGRST202' || code === '42703'
+        || msg.includes('column') || msg.includes('schema cache')
+        || msg.includes('function') || msg.includes('does not exist');
+  }
+  async function insertParticipant(payload) {
+    let res = await sb.from('participants').insert(payload).select().single();
+    if (res.error && _isSchemaError(res.error)) {
+      const legacy = {
+        name: payload.name, social: payload.social,
+        occupation: payload.occupation || '', connection: payload.connection || '',
+        goal: payload.goal || '', cid: payload.cid,
+      };
+      res = await sb.from('participants').insert(legacy).select().single();
+    }
+    return res;
+  }
 
   // безопасные обёртки над storage (Safari private / webview могут кидать)
   const SS = {
@@ -631,7 +682,7 @@
           sent++;
         } else {
           try {
-            const { data, error } = await sb.from('participants').insert(p).select().single();
+            const { data, error } = await insertParticipant(p);
             if (error) {
               if (error.code === '23505') { sent++; } // уже доставлено ранее (cid unique)
               else break; // нет связи/другая ошибка — оставляем в очереди
@@ -1188,6 +1239,13 @@
     return 'c' + Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
   }
 
+  function showTgLink(token) {
+    const a = document.getElementById('tg-link');
+    if (!a || !token) return;
+    a.href = 'https://t.me/' + encodeURIComponent(BOT_USERNAME) + '?start=amc_' + encodeURIComponent(token);
+    a.style.display = 'block';
+  }
+
   let submitting = false;
   async function submitForm() {
     if (submitting) return;
@@ -1220,18 +1278,36 @@
       occupation: document.getElementById('occupation').value.trim(),
       connection: '',
       goal: '',
-      cid: uuid()
+      cid: uuid(),
+      event_slug: EVENT_SLUG
     };
 
     const btn = document.getElementById('submitBtn');
     submitting = true;
     btn.disabled = true; btn.textContent = 'Сохраняем...';
 
-    let row = null, ok = false;
+    let row = null, ok = false, claimToken = null;
     if (sb) {
       try {
-        const { data, error } = await sb.from('participants').insert(payload).select().single();
-        if (!error && data) { row = data; ok = true; }
+        // Регистрация через серверную RPC: она же выдаёт одноразовый токен
+        // привязки к Telegram (генерится на сервере из CSPRNG, отдаётся один раз).
+        const rpc = await sb.rpc('register_participant', {
+          p_name: name,
+          p_social: social,
+          p_occupation: payload.occupation,
+          p_cid: payload.cid,
+          p_event_slug: EVENT_SLUG
+        });
+        if (!rpc.error && rpc.data) {
+          row = rpc.data;
+          claimToken = row.claim_token || null;
+          if ('claim_token' in row) delete row.claim_token;
+          ok = true;
+        } else if (rpc.error && _isSchemaError(rpc.error)) {
+          // Миграция не накатана — фолбэк на обычную вставку (без токена/кнопки).
+          const ins = await insertParticipant(payload);
+          if (!ins.error && ins.data) { row = ins.data; ok = true; }
+        }
       } catch (e) { ok = false; }
     }
 
@@ -1243,6 +1319,8 @@
       clearForm();
       showStatus('✓ Готово! Тебе открыт список участников', 'success');
       confetti();
+      // Кнопка перехода в бота: бот по одноразовому токену допишет Telegram-личность.
+      if (BOT_USERNAME && claimToken) showTgLink(claimToken);
     } else {
       const q = getQueue(); q.push(payload); setQueue(q);
       setMe(payload.cid, name, true);
