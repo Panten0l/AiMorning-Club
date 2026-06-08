@@ -100,8 +100,10 @@
   body.admin .admin-only { display: inline-flex !important; }
   body.admin .btn-delete { display: flex; }
 
-  .participant-item { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); animation: fadeIn 0.3s ease; }
+  .participant-item { display: flex; align-items: center; gap: 12px; padding: 12px 4px; border-bottom: 1px solid var(--border); animation: fadeIn 0.3s ease; cursor: pointer; border-radius: 8px; transition: background 0.15s; }
   .participant-item:last-child { border-bottom: none; }
+  .participant-item:hover { background: rgba(255,229,0,0.04); }
+  .chevron { flex-shrink: 0; color: var(--text-dim); font-size: 18px; line-height: 1; }
   .avatar-wrap { position: relative; flex-shrink: 0; }
   .avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--yellow); display: flex; align-items: center; justify-content: center; font-family: 'Space Mono', monospace; font-size: 13px; font-weight: 700; color: var(--black); flex-shrink: 0; }
   .online-dot { position: absolute; right: -1px; bottom: -1px; width: 11px; height: 11px; border-radius: 50%; background: var(--green); border: 2px solid var(--surface); }
@@ -177,6 +179,26 @@
   .tab:focus-visible, .tbtn:focus-visible, .submit-btn:focus-visible, .gate-btn:focus-visible,
   .modal-cancel:focus-visible, .modal-confirm:focus-visible, .btn-delete:focus-visible, .p-meta a:focus-visible { outline: 2px solid var(--yellow); outline-offset: 2px; }
 
+  /* детальная карточка участника */
+  .detail-head { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-bottom: 1.2rem; }
+  .detail-avatar { width: 72px; height: 72px; border-radius: 50%; background: var(--yellow); display: flex; align-items: center; justify-content: center; font-family: 'Space Mono', monospace; font-size: 24px; font-weight: 700; color: var(--black); }
+  .detail-name { font-family: 'Bebas Neue', sans-serif; font-size: 28px; letter-spacing: 1px; color: #fff; line-height: 1; }
+  .detail-online { display: inline-flex; align-items: center; gap: 6px; font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; }
+  .detail-online .od { width: 7px; height: 7px; border-radius: 50%; background: var(--green); display: inline-block; }
+  .detail-online.off { color: var(--text-dim); }
+  .detail-online.off .od { background: var(--text-dim); }
+  .detail-rows { text-align: left; margin-bottom: 1.3rem; }
+  .detail-row { padding: 11px 0; border-bottom: 1px solid var(--border); }
+  .detail-row:last-child { border-bottom: none; }
+  .detail-label { font-size: 10px; color: var(--text-muted); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 3px; }
+  .detail-val { font-size: 15px; color: #fff; word-break: break-word; }
+  .detail-actions { display: flex; flex-direction: column; gap: 8px; }
+  .detail-link { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 13px; border-radius: 9px; font-family: 'Manrope', sans-serif; font-size: 15px; font-weight: 600; text-decoration: none; transition: opacity 0.2s, transform 0.15s; }
+  .detail-link:hover { opacity: 0.92; transform: translateY(-1px); }
+  .detail-link.tg { background: #2AABEE; color: #fff; }
+  .detail-link.ig { background: linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888); color: #fff; }
+  .detail-link.web { background: var(--yellow); color: var(--black); }
+
   @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
   @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
   @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; } }
@@ -224,6 +246,22 @@
     <div class="modal-body" style="margin-bottom:1rem;">Покажи QR-код соседу — он откроет<br>эту же форму на своём телефоне</div>
     <div class="modal-btns">
       <button class="modal-cancel" style="flex:1" onclick="closeModal('qr-modal')">Закрыть</button>
+    </div>
+  </div>
+</div>
+
+<!-- Participant detail modal -->
+<div class="modal-overlay" id="detail-modal" role="dialog" aria-modal="true" aria-labelledby="detail-name-el">
+  <div class="modal" style="max-width:380px;">
+    <div class="detail-head">
+      <div class="detail-avatar" id="detail-avatar">?</div>
+      <div class="detail-name" id="detail-name-el">—</div>
+      <div class="detail-online off" id="detail-online"><span class="od"></span><span id="detail-online-txt">офлайн</span></div>
+    </div>
+    <div class="detail-rows" id="detail-rows"></div>
+    <div class="detail-actions" id="detail-actions"></div>
+    <div class="modal-btns" style="margin-top:1rem;">
+      <button class="modal-cancel" style="flex:1" onclick="closeModal('detail-modal')">Закрыть</button>
     </div>
   </div>
 </div>
@@ -662,13 +700,38 @@
     return Object.keys(participants).sort((a, b) => rowTs(participants[b]) - rowTs(participants[a]));
   }
 
+  // Распознаём соцсеть: telegram (t.me / @ник если указан как тг), instagram, сайт.
+  function socialInfo(s) {
+    if (!s) return null;
+    let t = s.trim();
+    let type = 'web', href = '', label = t;
+
+    if (/^https?:\/\//i.test(t)) {
+      href = t;
+      if (/(?:t\.me|telegram\.me|telegram\.org)\//i.test(t)) type = 'tg';
+      else if (/instagram\.com\//i.test(t)) type = 'ig';
+      else type = 'web';
+      // короткая подпись из ника, если он есть в конце ссылки
+      const m = t.replace(/[\/?#].*$/,'').match(/([\w.\-]+)\/?$/);
+      label = (type === 'tg' || type === 'ig') && m ? '@' + m[1].replace(/^@/, '') : t.replace(/^https?:\/\/(www\.)?/i, '');
+    } else if (/^(?:t\.me|telegram\.me)\//i.test(t)) {
+      type = 'tg'; const u = t.split('/')[1].replace(/^@/, ''); href = 'https://t.me/' + u; label = '@' + u;
+    } else if (/^tg:\/\//i.test(t) || /^telegram[:@]/i.test(t)) {
+      type = 'tg'; const u = t.replace(/^.*[:\/@]/, ''); href = 'https://t.me/' + u; label = '@' + u;
+    } else if (/^@?[\w.\-]+$/.test(t)) {
+      // голый @ник — по умолчанию Instagram (поле так и подписано), но если есть _bot или это явный тг — тг
+      const u = t.replace(/^@/, '');
+      type = 'ig'; href = 'https://instagram.com/' + u; label = '@' + u;
+    } else {
+      href = ''; label = t;
+    }
+    return { type, href, label };
+  }
   function socialLink(s) {
-    if (!s) return '';
-    const t = s.trim();
-    let href = '';
-    if (/^https?:\/\//i.test(t)) href = t;
-    else if (/^@?[\w.\-]+$/.test(t)) href = 'https://instagram.com/' + t.replace(/^@/, '');
-    return href ? '<a href="' + esc(href) + '" target="_blank" rel="noopener noreferrer">' + esc(t) + '</a>' : esc(t);
+    const i = socialInfo(s);
+    if (!i || !i.href) return esc(s || '');
+    const icon = i.type === 'tg' ? '✈ ' : (i.type === 'ig' ? '◎ ' : '🔗 ');
+    return '<a href="' + esc(i.href) + '" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">' + icon + esc(i.label) + '</a>';
   }
 
   function renderList() {
@@ -709,7 +772,7 @@
       if (p.occupation) metaParts.push(esc(p.occupation));
       const online = isOnline(key);
       const meTag = (me && me.key === key) ? '<span class="me-tag">ты</span>' : '';
-      return '<div class="participant-item">' +
+      return '<div class="participant-item" data-id="' + esc(key) + '" role="button" tabindex="0" aria-label="Открыть карточку ' + esc(p.name) + '">' +
         '<div class="avatar-wrap"><div class="avatar">' + esc(initials) + '</div>' + (online ? '<span class="online-dot" title="Онлайн"></span>' : '') + '</div>' +
         '<div class="p-info">' +
           '<div class="p-name">' + esc(p.name) + meTag + '</div>' +
@@ -718,15 +781,58 @@
         (badge ? '<div class="p-badge">' + esc(badge) + '</div>' : '') +
         '<span class="p-time">' + timeAgo(rowTs(p)) + '</span>' +
         '<button class="btn-delete" data-key="' + esc(key) + '" title="Удалить" aria-label="Удалить участника">✕</button>' +
+        '<span class="chevron" aria-hidden="true">›</span>' +
       '</div>';
     }).join('');
   }
 
-  // делегирование вместо inline-onclick (безопасно при любых id)
+  // делегирование: клик по корзине — удалить, клик по карточке — открыть детали
   document.getElementById('participants-list').addEventListener('click', e => {
-    const b = e.target.closest('.btn-delete');
-    if (b) confirmDelete(b.getAttribute('data-key'));
+    const del = e.target.closest('.btn-delete');
+    if (del) { confirmDelete(del.getAttribute('data-key')); return; }
+    const item = e.target.closest('.participant-item');
+    if (item) showParticipant(item.getAttribute('data-id'));
   });
+  document.getElementById('participants-list').addEventListener('keydown', e => {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    const item = e.target.closest('.participant-item');
+    if (item) { e.preventDefault(); showParticipant(item.getAttribute('data-id')); }
+  });
+
+  // ===== ДЕТАЛЬНАЯ КАРТОЧКА =====
+  function showParticipant(key) {
+    const p = participants[key];
+    if (!p) return;
+    const initials = (p.name || '?').trim().split(/\s+/).map(w => w[0]).join('').substring(0, 2).toUpperCase();
+    document.getElementById('detail-avatar').textContent = initials;
+    document.getElementById('detail-name-el').textContent = p.name || '';
+
+    const on = isOnline(key);
+    const onEl = document.getElementById('detail-online');
+    onEl.className = 'detail-online' + (on ? '' : ' off');
+    document.getElementById('detail-online-txt').textContent = on ? 'сейчас онлайн' : 'не в сети';
+
+    const rows = [];
+    if (p.occupation) rows.push(['Чем занимается', esc(p.occupation)]);
+    const si = socialInfo(p.social);
+    if (p.social) rows.push(['Соцсеть', si && si.href ? socialLink(p.social) : esc(p.social)]);
+    if (p.connection) rows.push(['Связь с клубом', esc(p.connection)]);
+    if (p.goal) rows.push(['Что ищет', esc(p.goal)]);
+    rows.push(['Зарегистрировался', esc(p.created_at ? new Date(p.created_at).toLocaleString('ru-RU') : '—')]);
+    document.getElementById('detail-rows').innerHTML = rows.map(r =>
+      '<div class="detail-row"><div class="detail-label">' + r[0] + '</div><div class="detail-val">' + r[1] + '</div></div>'
+    ).join('');
+
+    const act = document.getElementById('detail-actions');
+    if (si && si.href) {
+      const cls = si.type === 'tg' ? 'tg' : (si.type === 'ig' ? 'ig' : 'web');
+      const txt = si.type === 'tg' ? '✈ Написать в Telegram' : (si.type === 'ig' ? '◎ Открыть Instagram' : '🔗 Открыть профиль');
+      act.innerHTML = '<a class="detail-link ' + cls + '" href="' + esc(si.href) + '" target="_blank" rel="noopener noreferrer">' + txt + '</a>';
+    } else {
+      act.innerHTML = '';
+    }
+    openModal('detail-modal');
+  }
 
   function renderStats() {
     const keys = Object.keys(participants);
