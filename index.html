@@ -342,13 +342,6 @@
         <label for="occupation">Чем занимаешься?</label>
         <input type="text" id="occupation" placeholder="Предприниматель, маркетолог, разработчик..." autocomplete="organization-title" enterkeyhint="next">
       </div>
-      <div class="field anon-field">
-        <label class="anon-check">
-          <input type="checkbox" id="anon">
-          <span class="anon-box" aria-hidden="true"></span>
-          <span class="anon-text">Скрыть мою карточку (анонимно)<br><small>В списке участников вместо твоих данных будет «Анонимный участник». Тебя посчитают, но контакты не покажут.</small></span>
-        </label>
-      </div>
     </div>
 
         <button class="submit-btn" id="submitBtn" onclick="submitForm()">Зарегистрироваться</button>
@@ -1407,15 +1400,13 @@
     }
     submitForm._force = false;
 
-    const isAnon = !!document.getElementById('anon').checked;
     const payload = {
       name, social,
       occupation: document.getElementById('occupation').value.trim(),
       connection: '',
       goal: '',
       cid: uuid(),
-      event_slug: EVENT_SLUG,
-      is_anonymous: isAnon
+      event_slug: EVENT_SLUG
     };
 
     const btn = document.getElementById('submitBtn');
@@ -1432,8 +1423,7 @@
           p_social: social,
           p_occupation: payload.occupation,
           p_cid: payload.cid,
-          p_event_slug: EVENT_SLUG,
-          p_is_anonymous: isAnon
+          p_event_slug: EVENT_SLUG
         });
         if (!rpc.error && rpc.data) {
           row = rpc.data;
@@ -1470,7 +1460,6 @@
 
   function clearForm() {
     ['name', 'social', 'occupation'].forEach(id => document.getElementById(id).value = '');
-    const a = document.getElementById('anon'); if (a) a.checked = false;
   }
 </script>
 </body>
