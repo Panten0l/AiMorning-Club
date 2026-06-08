@@ -73,6 +73,21 @@
   select option { background: #111; }
   textarea { resize: none; height: 90px; line-height: 1.6; }
 
+  .anon-field { margin-top: 0.3rem; }
+  .anon-check { display: flex; align-items: flex-start; gap: 10px; cursor: pointer; text-transform: none; letter-spacing: 0; font-weight: 500; color: var(--text); font-size: 13px; line-height: 1.4; }
+  .anon-check input { position: absolute; opacity: 0; width: 0; height: 0; }
+  .anon-box { flex-shrink: 0; width: 20px; height: 20px; border: 1px solid var(--border2); border-radius: 6px; background: var(--black); margin-top: 1px; transition: all 0.15s; position: relative; }
+  .anon-check input:checked + .anon-box { background: var(--yellow); border-color: var(--yellow); }
+  .anon-check input:checked + .anon-box::after { content: '✓'; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: var(--black); font-size: 13px; font-weight: 700; }
+  .anon-check input:focus-visible + .anon-box { outline: 2px solid var(--yellow); outline-offset: 2px; }
+  .anon-text small { display: block; color: var(--text-dim); font-size: 11px; margin-top: 3px; line-height: 1.4; }
+
+  .event-title-bar { display: flex; align-items: center; gap: 10px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 0.9rem 1.1rem; margin-bottom: 1rem; }
+  .event-title-bar .et-icon { font-size: 18px; }
+  .event-title-bar .et-text { font-family: 'Space Mono', monospace; font-size: 11px; color: var(--yellow); letter-spacing: 1.5px; text-transform: uppercase; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .anon-avatar { background: var(--border2) !important; color: var(--text-muted) !important; }
+  .anon-name { color: var(--text-muted); font-style: italic; }
+
   .submit-btn { width: 100%; padding: 18px; background: var(--yellow); color: var(--black); font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 3px; border: none; border-radius: var(--radius); cursor: pointer; margin-top: 1rem; transition: opacity 0.2s, transform 0.15s; }
   .submit-btn:hover { opacity: 0.92; transform: translateY(-1px); }
   .submit-btn:active { transform: scale(0.98); }
@@ -327,6 +342,13 @@
         <label for="occupation">Чем занимаешься?</label>
         <input type="text" id="occupation" placeholder="Предприниматель, маркетолог, разработчик..." autocomplete="organization-title" enterkeyhint="next">
       </div>
+      <div class="field anon-field">
+        <label class="anon-check">
+          <input type="checkbox" id="anon">
+          <span class="anon-box" aria-hidden="true"></span>
+          <span class="anon-text">Скрыть мою карточку (анонимно)<br><small>В списке участников вместо твоих данных будет «Анонимный участник». Тебя посчитают, но контакты не покажут.</small></span>
+        </label>
+      </div>
     </div>
 
         <button class="submit-btn" id="submitBtn" onclick="submitForm()">Зарегистрироваться</button>
@@ -344,7 +366,18 @@
       <div style="margin-top:1rem;"><button class="tbtn ghost" onclick="toggleAdmin()" style="margin:0 auto;">🔒 Я организатор</button></div>
     </div>
 
+    <!-- директория ивента скрыта организатором -->
+    <div class="gate" id="dir-hidden" style="display:none;">
+      <div class="gate-icon">🙈</div>
+      <div class="gate-title">Список скрыт</div>
+      <div class="gate-text">Организатор скрыл список участников этого ивента.<br>Регистрация при этом работает как обычно.</div>
+    </div>
+
     <div id="list-inner">
+    <div class="event-title-bar" id="event-title-bar" style="display:none;">
+      <span class="et-icon">📍</span>
+      <span class="et-text" id="event-title-text"></span>
+    </div>
     <div class="search-wrap">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       <input type="text" id="search" placeholder="Поиск по имени, нику, занятию..." aria-label="Поиск участников" autocomplete="off">
@@ -403,6 +436,7 @@
   // ===== ГИБРИД: связка с Telegram-ботом / мини-аппом =====
   const BOT_USERNAME = 'AEvents_bot';   // Telegram-бот (event/mini-app) для привязки анкеты (без @)
   const EVENT_SLUG = (new URLSearchParams(location.search).get('event') || '').trim();
+  let directoryHidden = false;          // организатор скрыл список участников этого ивента
 
   // Если форма открыта ВНУТРИ Telegram (мини-апп) — берём личность из Telegram.
   let TG_USER = null;
@@ -517,6 +551,7 @@
       auth: { persistSession: false },
       realtime: { params: { eventsPerSecond: 5 } }
     });
+    await loadEventMeta();
     await loadAll();
     startRealtime();
     joinPresence();
@@ -548,6 +583,14 @@
     return true;
   }
   function applyGate() {
+    // Если организатор скрыл директорию — список не показываем вообще.
+    if (directoryHidden) {
+      const h = document.getElementById('dir-hidden');
+      if (h) h.style.display = 'block';
+      document.getElementById('gate').style.display = 'none';
+      document.getElementById('list-inner').style.display = 'none';
+      return;
+    }
     const locked = !isMember();
     document.getElementById('gate').style.display = locked ? 'block' : 'none';
     document.getElementById('list-inner').style.display = locked ? 'none' : 'block';
@@ -565,6 +608,41 @@
 
   // ===== ДАННЫЕ =====
   function rowTs(r) { return r && r.created_at ? Date.parse(r.created_at) : 0; }
+
+  // Заголовок ивента + признак «директория скрыта организатором».
+  // Если ивент не задан (?event=) — ничего не скрываем и заголовок не показываем.
+  async function loadEventMeta() {
+    if (!EVENT_SLUG) return;
+    const bar = document.getElementById('event-title-bar');
+    const txt = document.getElementById('event-title-text');
+    if (txt) txt.textContent = 'Ивент · ' + EVENT_SLUG;
+    if (bar) bar.style.display = 'flex';
+    if (!sb) return;
+    try {
+      const { data, error } = await sb
+        .from('event_meta')
+        .select('directory_hidden')
+        .eq('event_slug', EVENT_SLUG)
+        .maybeSingle();
+      // Нет строки/ошибка схемы → считаем директорию открытой (обратная совместимость).
+      directoryHidden = (!error && data && data.directory_hidden === true);
+    } catch (e) { directoryHidden = false; }
+    applyDirVisibility();
+  }
+
+  // Переключаем между списком участников и сообщением «список скрыт».
+  function applyDirVisibility() {
+    const hidden = document.getElementById('dir-hidden');
+    if (!hidden) return;
+    if (directoryHidden) {
+      hidden.style.display = 'block';
+      document.getElementById('list-inner').style.display = 'none';
+      document.getElementById('gate').style.display = 'none';
+    } else {
+      hidden.style.display = 'none';
+      applyGate();
+    }
+  }
 
   async function loadAll() {
     if (!sb || fetching) return;
@@ -743,12 +821,26 @@
   let lastSig = '';
   function listSignature(filtered) {
     let s = '';
-    for (const k of filtered) s += k + ':' + (isOnline(k) ? '1' : '0') + ':' + rowTs(participants[k]) + '|';
+    for (const k of filtered) s += k + ':' + (isOnline(k) ? '1' : '0') + ':' + (isHiddenCard(participants[k]) ? 'a' : 'n') + ':' + rowTs(participants[k]) + '|';
     return s;
   }
 
   function sortedKeys() {
-    return Object.keys(participants).sort((a, b) => rowTs(participants[b]) - rowTs(participants[a]));
+    let keys = Object.keys(participants);
+    // Если открыт конкретный ивент (?event=slug) — показываем ВСЕХ его участников.
+    if (EVENT_SLUG) keys = keys.filter(k => (participants[k].event_slug || '') === EVENT_SLUG);
+    return keys.sort((a, b) => rowTs(participants[b]) - rowTs(participants[a]));
+  }
+
+  // Карточка скрыта (анонимный участник). Организатор видит данные, остальные — нет.
+  function isHiddenCard(p) {
+    return !!(p && p.is_anonymous) && !admin;
+  }
+
+  // Прямая ссылка в Telegram по tg_username (надёжнее парсинга social).
+  function tgUserLink(p) {
+    const u = (p && p.tg_username ? String(p.tg_username) : '').trim().replace(/^@/, '');
+    return u ? 'https://t.me/' + encodeURIComponent(u) : '';
   }
 
   // Распознаём соцсеть: telegram (t.me / @ник если указан как тг), instagram, сайт.
@@ -792,6 +884,8 @@
     const q = (document.getElementById('search').value || '').toLowerCase().trim();
     const filtered = q ? keys.filter(k => {
       const p = participants[k];
+      // По анонимным участникам поиск не пускаем (их данные скрыты), кроме админа.
+      if (isHiddenCard(p)) return 'анонимный участник'.includes(q);
       return [p.name, p.social, p.occupation, p.connection, p.goal].join(' ').toLowerCase().includes(q);
     }) : keys;
 
@@ -816,13 +910,31 @@
 
     el.innerHTML = filtered.map(key => {
       const p = participants[key];
+      const anon = isHiddenCard(p);
+      const online = isOnline(key);
+      const meTag = (me && me.key === key) ? '<span class="me-tag">ты</span>' : '';
+      // Ярлык ивента у карточки, если общий список (без ?event=) и ивент задан.
+      const evBadge = (!EVENT_SLUG && p.event_slug) ? '<div class="p-badge">' + esc(p.event_slug) + '</div>' : '';
+
+      if (anon) {
+        return '<div class="participant-item" data-id="' + esc(key) + '" role="button" tabindex="0" aria-label="Анонимный участник">' +
+          '<div class="avatar-wrap"><div class="avatar anon-avatar">?</div></div>' +
+          '<div class="p-info">' +
+            '<div class="p-name anon-name">Анонимный участник' + meTag + '</div>' +
+            '<div class="p-meta">контакты скрыты</div>' +
+          '</div>' +
+          evBadge +
+          '<span class="p-time">' + timeAgo(rowTs(p)) + '</span>' +
+          '<button class="btn-delete" data-key="' + esc(key) + '" title="Удалить" aria-label="Удалить участника">✕</button>' +
+          '<span class="chevron" aria-hidden="true">›</span>' +
+        '</div>';
+      }
+
       const initials = (p.name || '?').trim().split(/\s+/).map(w => w[0]).join('').substring(0, 2).toUpperCase();
       const badge = p.connection || '';
       const metaParts = [];
       if (p.social) metaParts.push(socialLink(p.social));
       if (p.occupation) metaParts.push(esc(p.occupation));
-      const online = isOnline(key);
-      const meTag = (me && me.key === key) ? '<span class="me-tag">ты</span>' : '';
       return '<div class="participant-item" data-id="' + esc(key) + '" role="button" tabindex="0" aria-label="Открыть карточку ' + esc(p.name) + '">' +
         '<div class="avatar-wrap"><div class="avatar">' + esc(initials) + '</div>' + (online ? '<span class="online-dot" title="Онлайн"></span>' : '') + '</div>' +
         '<div class="p-info">' +
@@ -830,6 +942,7 @@
           '<div class="p-meta">' + metaParts.join(' · ') + '</div>' +
         '</div>' +
         (badge ? '<div class="p-badge">' + esc(badge) + '</div>' : '') +
+        evBadge +
         '<span class="p-time">' + timeAgo(rowTs(p)) + '</span>' +
         '<button class="btn-delete" data-key="' + esc(key) + '" title="Удалить" aria-label="Удалить участника">✕</button>' +
         '<span class="chevron" aria-hidden="true">›</span>' +
@@ -854,6 +967,21 @@
   function showParticipant(key) {
     const p = participants[key];
     if (!p) return;
+
+    // Анонимный участник: скрываем имя/соцсеть/контакты, кнопки нет.
+    if (isHiddenCard(p)) {
+      document.getElementById('detail-avatar').textContent = '?';
+      document.getElementById('detail-name-el').textContent = 'Анонимный участник';
+      const onElA = document.getElementById('detail-online');
+      onElA.className = 'detail-online off';
+      document.getElementById('detail-online-txt').textContent = 'контакты скрыты';
+      document.getElementById('detail-rows').innerHTML =
+        '<div class="detail-row"><div class="detail-val">Этот участник скрыл свою карточку. Имя и контакты недоступны.</div></div>';
+      document.getElementById('detail-actions').innerHTML = '';
+      openModal('detail-modal');
+      return;
+    }
+
     const initials = (p.name || '?').trim().split(/\s+/).map(w => w[0]).join('').substring(0, 2).toUpperCase();
     document.getElementById('detail-avatar').textContent = initials;
     document.getElementById('detail-name-el').textContent = p.name || '';
@@ -875,13 +1003,19 @@
     ).join('');
 
     const act = document.getElementById('detail-actions');
-    if (si && si.href) {
+    const acts = [];
+    // Кнопка Telegram: если есть tg_username — строим ссылку напрямую (надёжнее).
+    const tgHref = tgUserLink(p);
+    if (tgHref) {
+      acts.push('<a class="detail-link tg" href="' + esc(tgHref) + '" target="_blank" rel="noopener noreferrer">✈ Написать в Telegram</a>');
+    }
+    // Соцсеть из поля social (если это не дубль той же телеги).
+    if (si && si.href && !(tgHref && si.type === 'tg')) {
       const cls = si.type === 'tg' ? 'tg' : (si.type === 'ig' ? 'ig' : 'web');
       const txt = si.type === 'tg' ? '✈ Написать в Telegram' : (si.type === 'ig' ? '◎ Открыть Instagram' : '🔗 Открыть профиль');
-      act.innerHTML = '<a class="detail-link ' + cls + '" href="' + esc(si.href) + '" target="_blank" rel="noopener noreferrer">' + txt + '</a>';
-    } else {
-      act.innerHTML = '';
+      acts.push('<a class="detail-link ' + cls + '" href="' + esc(si.href) + '" target="_blank" rel="noopener noreferrer">' + txt + '</a>');
     }
+    act.innerHTML = acts.join('');
     openModal('detail-modal');
   }
 
@@ -1273,13 +1407,15 @@
     }
     submitForm._force = false;
 
+    const isAnon = !!document.getElementById('anon').checked;
     const payload = {
       name, social,
       occupation: document.getElementById('occupation').value.trim(),
       connection: '',
       goal: '',
       cid: uuid(),
-      event_slug: EVENT_SLUG
+      event_slug: EVENT_SLUG,
+      is_anonymous: isAnon
     };
 
     const btn = document.getElementById('submitBtn');
@@ -1296,7 +1432,8 @@
           p_social: social,
           p_occupation: payload.occupation,
           p_cid: payload.cid,
-          p_event_slug: EVENT_SLUG
+          p_event_slug: EVENT_SLUG,
+          p_is_anonymous: isAnon
         });
         if (!rpc.error && rpc.data) {
           row = rpc.data;
@@ -1333,6 +1470,7 @@
 
   function clearForm() {
     ['name', 'social', 'occupation'].forEach(id => document.getElementById(id).value = '');
+    const a = document.getElementById('anon'); if (a) a.checked = false;
   }
 </script>
 </body>
